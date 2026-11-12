@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, User, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
@@ -29,7 +29,8 @@ export default function AdminLoginPage() {
       if (!res.ok) {
         setError(data.error || 'فشل تسجيل الدخول');
       } else {
-        router.push('/admin');
+        router.replace('/admin');
+        router.refresh();
       }
     } catch {
       setError('حدث خطأ في الاتصال بالخادم');
@@ -41,7 +42,6 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-neutral-900/80 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
-        
         <div className="text-center space-y-2">
           <div className="w-12 h-12 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center mx-auto text-amber-400">
             <ShieldCheck className="w-6 h-6" />
@@ -63,18 +63,19 @@ export default function AdminLoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-neutral-300 mb-1.5">
-              اسم المستخدم
+              البريد الإلكتروني
             </label>
             <div className="relative">
               <input
-                type="text"
+                type="email"
+                autoComplete="username"
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
                 className="w-full bg-black text-xs text-white p-3 pr-10 rounded-xl border border-white/15 focus:outline-none focus:border-amber-400"
               />
-              <User className="w-4 h-4 absolute right-3 top-3.5 text-neutral-500" />
+              <Mail className="w-4 h-4 absolute right-3 top-3.5 text-neutral-500" />
             </div>
           </div>
 
@@ -85,6 +86,7 @@ export default function AdminLoginPage() {
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -96,6 +98,7 @@ export default function AdminLoginPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute left-3 top-3.5 text-neutral-500 hover:text-white"
+                aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -110,7 +113,6 @@ export default function AdminLoginPage() {
             {loading ? 'جاري التحقق...' : 'تسجيل الدخول'}
           </button>
         </form>
-
       </div>
     </div>
   );
