@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { cookies } from 'next/headers';
 
 const COOKIE_NAME = 'versace_admin_token';
@@ -11,7 +11,7 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export interface AdminSession {
+export interface AdminSession extends JWTPayload {
   username: string;
   userId: string;
   email: string;
