@@ -1,21 +1,23 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import bcrypt from 'bcryptjs';
-import { getSettingsAsync } from '@/lib/store';
 
 const COOKIE_NAME = 'versace_admin_token';
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    console.warn('JWT_SECRET is not set in environment variables; using runtime fallback key.');
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET must be configured with at least 32 characters.');
   }
-  return new TextEncoder().encode(
-    secret || 'versace-luxury-fashion-store-jwt-secret-runtime-key'
-  );
+  return new TextEncoder().encode(secret);
 }
 
-export async function signToken(payload: { username: string }) {
+export interface AdminSession {
+  username: string;
+  userId: string;
+  email: string;
+}
+
+export async function signToken(payload: AdminSession) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -23,20 +25,27 @@ export async function signToken(payload: { username: string }) {
     .sign(getJwtSecret());
 }
 
-export async function verifyToken(token: string) {
+export async function verifyToken(token: string): Promise<AdminSession | null> {
   try {
     const verified = await jwtVerify(token, getJwtSecret());
-    return verified.payload as { username: string };
+    const payload = verified.payload;
+
+    if (
+      typeof payload.username !== 'string' ||
+      typeof payload.userId !== 'string' ||
+      typeof payload.email !== 'string'
+    ) {
+      return null;
+    }
+
+    return {
+      username: payload.username,
+      userId: payload.userId,
+      email: payload.email,
+    };
   } catch {
     return null;
   }
-}
-
-export async function authenticateAdmin(password: string): Promise<boolean> {
-  const settings = await getSettingsAsync();
-  const hash = settings.adminPasswordHash;
-  if (!hash) return false;
-  return await bcrypt.compare(password, hash);
 }
 
 export async function setAdminAuthCookie(token: string) {
@@ -46,7 +55,7 @@ export async function setAdminAuthCookie(token: string) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 86400, // 24 hours
+    maxAge: 86400,
   });
 }
 
@@ -55,7 +64,7 @@ export async function removeAdminAuthCookie() {
   cookieStore.delete(COOKIE_NAME);
 }
 
-export async function getAdminFromSession() {
+export async function getAdminFromSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
