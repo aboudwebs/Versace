@@ -24,21 +24,23 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick }) => {
     settings?.heroDescriptionEn || 'Discover the new luxury collection crafted for the modern gentleman.'
   );
 
-  const heroImg = settings?.heroImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop';
+  const heroImg = settings?.heroImage;
   const whatsappNum = settings?.whatsappNumber || '+963900000000';
   const cleanNumber = whatsappNum.replace(/[^\d+]/g, '');
 
   return (
     <section id="hero" className="relative w-full h-[85vh] min-h-[500px] max-h-[900px] overflow-hidden bg-black">
       <div className="absolute inset-0 z-0">
-        <Image
-          src={heroImg}
-          alt={title}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center opacity-65 scale-105 transition-transform duration-1000 ease-out"
-        />
+        {heroImg && (
+          <Image
+            src={heroImg}
+            alt={title}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center opacity-65 scale-105 transition-transform duration-1000 ease-out"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/60"></div>
       </div>
 
